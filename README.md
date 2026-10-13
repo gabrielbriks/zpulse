@@ -9,13 +9,28 @@ Um widget flutuante moderno, minimalista e de alta performance para Windows que 
 
 ---
 
+## 📸 Demonstração / Previews
+
+<div align="center">
+
+| 📏 Modo Barra Compacta (46px - Padrão) | 📊 Modo Card Detalhado |
+| :---: | :---: |
+| <img src="Assets/preview_compact.png" alt="ZPulse Modo Barra Compacta" width="460" /> | <img src="Assets/preview_card.png" alt="ZPulse Modo Card Detalhado" width="280" /> |
+| *Ultra-fino, discreto e ideal para não cobrir IDEs nem janelas* | *Métricas completas em GBs, status dinâmico e rodapé de versão* |
+
+</div>
+
+---
+
 ## 📋 Sumário
+- [Demonstração / Previews](#-demonstração--previews)
 - [Recursos Principais](#-recursos-principais)
 - [Tecnologias Utilizadas e os "Porquês"](#-tecnologias-utilizadas-e-os-porquês)
 - [Arquitetura do Sistema](#-arquitetura-do-sistema)
 - [Estrutura de Arquivos](#-estrutura-de-arquivos)
 - [Como Executar em Desenvolvimento](#-como-executar-em-desenvolvimento)
 - [Como Gerar o Executável Único para Compartilhar](#-como-gerar-o-executável-único-para-compartilhar)
+- [Versionamento & CI/CD Automático no GitHub](#-versionamento--cicd-automático-no-github)
 - [Guia de Utilização](#-guia-de-utilização)
 
 ---
@@ -118,7 +133,7 @@ flowchart TD
 | Arquivo / Pasta | Papel no Projeto |
 | :--- | :--- |
 | **`ZPulse.csproj`** | Configurações do projeto .NET 8, dependências WPF e regras de publicação em arquivo único (*Self-Contained*). |
-| **`Assets/`** | Ícone oficial "Z-Wave" em Emerald Green de alta nitidez nos formatos `app_icon.png` (usado na UI) e `app_icon.ico` (embutido no binário .exe). |
+| **`Assets/`** | Recursos visuais do aplicativo: ícones oficiais "Z-Wave" (`app_icon.png`, `app_icon.ico`) e capturas de tela dos modos (`preview_compact.png`, `preview_card.png`). |
 | **`SystemMetricsService.cs`** | Serviço responsável por todas as chamadas P/Invoke para as APIs Win32 e contadores de sistema. |
 | **`MainWindow.xaml`** | Interface visual XAML: paleta escura glassmorphism, barras de progresso, tipografia e menu de contexto. |
 | **`MainWindow.xaml.cs`** | *Code-behind*: temporizador de 1s, manipulação de arrasto (`DragMove`), redimensionamento (`DragDelta`) e regras de cores. |
