@@ -1,0 +1,16 @@
+## Ignorar pastas de compilação .NET
+bin/
+obj/
+publish/
+publish-single/
+
+## Arquivos de IDE / Usuário
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vscode/
+
+## Logs e temporários
+*.log
