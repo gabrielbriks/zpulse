@@ -1,0 +1,278 @@
+<Window x:Class="ZPulse.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="ZPulse Widget" 
+        Icon="Assets/app_icon.png"
+        Height="46" Width="390"
+        MinWidth="320" MinHeight="38"
+        WindowStyle="None" 
+        AllowsTransparency="True" 
+        Background="Transparent"
+        Topmost="True"
+        ShowInTaskbar="True"
+        ResizeMode="NoResize"
+        WindowStartupLocation="Manual"
+        MouseLeftButtonDown="Window_MouseLeftButtonDown"
+        MouseDoubleClick="Window_MouseDoubleClick">
+
+    <Window.Resources>
+        <!-- Estilo base para barras de progresso -->
+        <Style x:Key="WidgetProgressBarStyle" TargetType="ProgressBar">
+            <Setter Property="Height" Value="5"/>
+            <Setter Property="Background" Value="#25FFFFFF"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Grid>
+                            <Border CornerRadius="2.5" Background="{TemplateBinding Background}"/>
+                            <Border x:Name="PART_Track" CornerRadius="2.5"/>
+                            <Border x:Name="PART_Indicator" HorizontalAlignment="Left" CornerRadius="2.5" Background="{TemplateBinding Foreground}"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Mini barra para o modo compacto horizontal -->
+        <Style x:Key="MiniProgressBarStyle" TargetType="ProgressBar">
+            <Setter Property="Height" Value="3"/>
+            <Setter Property="Background" Value="#20FFFFFF"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Grid>
+                            <Border CornerRadius="1.5" Background="{TemplateBinding Background}"/>
+                            <Border x:Name="PART_Track" CornerRadius="1.5"/>
+                            <Border x:Name="PART_Indicator" HorizontalAlignment="Left" CornerRadius="1.5" Background="{TemplateBinding Foreground}"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Estilo invisível para o Thumb de redimensionamento -->
+        <Style x:Key="ResizeThumbStyle" TargetType="Thumb">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Thumb">
+                        <Rectangle Fill="Transparent"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Menu de contexto (botão direito) -->
+        <ContextMenu x:Key="WidgetContextMenu">
+            <MenuItem x:Name="MnuCompact" Header="📏 Alternar Modo Compacto / Card" Click="ToggleMode_Click"/>
+            <MenuItem Header="📌 Fixar no Topo (Always on Top)" 
+                      IsCheckable="True" 
+                      IsChecked="{Binding Topmost, RelativeSource={RelativeSource AncestorType=Window}}" 
+                      Click="ToggleTopmost_Click"/>
+            <Separator/>
+            <MenuItem Header="Opacidade">
+                <MenuItem Header="100%" Click="SetOpacity_Click" Tag="1.0"/>
+                <MenuItem Header="85%" Click="SetOpacity_Click" Tag="0.85"/>
+                <MenuItem Header="65%" Click="SetOpacity_Click" Tag="0.65"/>
+            </MenuItem>
+            <MenuItem Header="⚡ Abrir Gerenciador de Tarefas" Click="OpenTaskManager_Click"/>
+            <Separator/>
+            <MenuItem Header="❌ Fechar ZPulse" Click="Close_Click"/>
+        </ContextMenu>
+    </Window.Resources>
+
+    <!-- Card Principal com cantos arredondados, sombra e menu de contexto -->
+    <Border CornerRadius="12" 
+            Background="#EE14161E" 
+            BorderBrush="#33FFFFFF" 
+            BorderThickness="1"
+            Margin="4"
+            ContextMenu="{StaticResource WidgetContextMenu}">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="10" Direction="270" ShadowDepth="2" Opacity="0.4" Color="#000000"/>
+        </Border.Effect>
+
+        <Grid>
+            <!-- ========================================== -->
+            <!-- 1. MODO COMPACTO HORIZONTAL (BARRA ULTRA-SLIM) -->
+            <!-- ========================================== -->
+            <Grid x:Name="CompactLayout" Margin="10,0,10,0" VerticalAlignment="Center" Visibility="Visible">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/> <!-- Logo -->
+                    <ColumnDefinition Width="10"/>   <!-- Espaço -->
+                    <ColumnDefinition Width="*"/>    <!-- CPU -->
+                    <ColumnDefinition Width="10"/>   <!-- Divisor -->
+                    <ColumnDefinition Width="*"/>    <!-- MEM -->
+                    <ColumnDefinition Width="10"/>   <!-- Divisor -->
+                    <ColumnDefinition Width="*"/>    <!-- DISK -->
+                    <ColumnDefinition Width="8"/>    <!-- Espaço -->
+                    <ColumnDefinition Width="Auto"/> <!-- Ações -->
+                </Grid.ColumnDefinitions>
+
+                <!-- Logo & Ícone ZPulse -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Image Source="Assets/app_icon.png" Width="18" Height="18" Margin="0,0,6,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
+                    <TextBlock Text="ZPulse" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- CPU Compacto -->
+                <Grid Grid.Column="2" VerticalAlignment="Center">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <DockPanel Grid.Row="0" Margin="0,0,0,2">
+                        <TextBlock Text="CPU" FontSize="9" FontWeight="Medium" Foreground="#9CA3AF" DockPanel.Dock="Left"/>
+                        <TextBlock x:Name="TxtCompactCpu" Text="0%" HorizontalAlignment="Right" FontSize="10" FontWeight="Bold" Foreground="#60A5FA" MinWidth="28" TextAlignment="Right"/>
+                    </DockPanel>
+                    <ProgressBar x:Name="BarCompactCpu" Grid.Row="1" Style="{StaticResource MiniProgressBarStyle}" Foreground="#60A5FA" Value="0" Maximum="100"/>
+                </Grid>
+
+                <!-- Divisor 1 -->
+                <Border Grid.Column="3" Width="1" Height="18" Background="#20FFFFFF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+                <!-- MEM Compacto -->
+                <Grid Grid.Column="4" VerticalAlignment="Center">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <DockPanel Grid.Row="0" Margin="0,0,0,2">
+                        <TextBlock Text="RAM" FontSize="9" FontWeight="Medium" Foreground="#9CA3AF" DockPanel.Dock="Left"/>
+                        <TextBlock x:Name="TxtCompactMem" Text="0%" HorizontalAlignment="Right" FontSize="10" FontWeight="Bold" Foreground="#A78BFA" MinWidth="28" TextAlignment="Right"/>
+                    </DockPanel>
+                    <ProgressBar x:Name="BarCompactMem" Grid.Row="1" Style="{StaticResource MiniProgressBarStyle}" Foreground="#A78BFA" Value="0" Maximum="100"/>
+                </Grid>
+
+                <!-- Divisor 2 -->
+                <Border Grid.Column="5" Width="1" Height="18" Background="#20FFFFFF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+                <!-- DISCO Compacto -->
+                <Grid Grid.Column="6" VerticalAlignment="Center">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <DockPanel Grid.Row="0" Margin="0,0,0,2">
+                        <TextBlock Text="DSK" FontSize="9" FontWeight="Medium" Foreground="#9CA3AF" DockPanel.Dock="Left"/>
+                        <TextBlock x:Name="TxtCompactDisk" Text="0%" HorizontalAlignment="Right" FontSize="10" FontWeight="Bold" Foreground="#34D399" MinWidth="28" TextAlignment="Right"/>
+                    </DockPanel>
+                    <ProgressBar x:Name="BarCompactDisk" Grid.Row="1" Style="{StaticResource MiniProgressBarStyle}" Foreground="#34D399" Value="0" Maximum="100"/>
+                </Grid>
+
+                <!-- Botões de Ação Compactos -->
+                <StackPanel Grid.Column="8" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="◱" Width="18" Height="18" Margin="0,0,2,0"
+                            Background="Transparent" BorderThickness="0" Foreground="#9CA3AF" FontSize="10"
+                            Cursor="Hand" ToolTip="Expandir para modo Card (ou dê duplo clique)" Click="ToggleMode_Click"/>
+                    <Button x:Name="BtnCompactPin" Content="📌" Width="18" Height="18" Margin="0,0,2,0"
+                            Background="Transparent" BorderThickness="0" Foreground="#60A5FA" FontSize="9"
+                            Cursor="Hand" ToolTip="Fixar sempre no topo" Click="ToggleTopmost_Click"/>
+                    <Button Content="✕" Width="18" Height="18"
+                            Background="Transparent" BorderThickness="0" Foreground="#9CA3AF" FontSize="10"
+                            Cursor="Hand" ToolTip="Fechar" Click="Close_Click"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- ========================================== -->
+            <!-- 2. MODO EXPANDIDO (CARD VERTICAL COMPLETO) -->
+            <!-- ========================================== -->
+            <Grid x:Name="CardLayout" Margin="12,10,12,10" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/> <!-- Header -->
+                    <RowDefinition Height="*"/>    <!-- Métricas -->
+                    <RowDefinition Height="Auto"/> <!-- Rodapé -->
+                </Grid.RowDefinitions>
+
+                <!-- Cabeçalho -->
+                <Grid Grid.Row="0" Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Image Source="Assets/app_icon.png" Width="22" Height="22" Margin="0,0,8,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
+                        <TextBlock Text="ZPulse" FontSize="13" FontWeight="SemiBold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <Button Content="—" Width="20" Height="20" Margin="0,0,2,0"
+                                Background="Transparent" BorderThickness="0" Foreground="#9CA3AF" FontSize="11"
+                                Cursor="Hand" ToolTip="Compactar para barra horizontal (ou dê duplo clique)" Click="ToggleMode_Click"/>
+                        <Button x:Name="BtnCardPin" Content="📌" Width="20" Height="20" Margin="0,0,2,0"
+                                Background="Transparent" BorderThickness="0" Foreground="#60A5FA" FontSize="10"
+                                Cursor="Hand" ToolTip="Fixar sempre no topo" Click="ToggleTopmost_Click"/>
+                        <Button Content="✕" Width="20" Height="20"
+                                Background="Transparent" BorderThickness="0" Foreground="#9CA3AF" FontSize="11"
+                                Cursor="Hand" ToolTip="Fechar" Click="Close_Click"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Métricas Verticais -->
+                <StackPanel Grid.Row="1" VerticalAlignment="Center">
+                    <!-- CPU -->
+                    <Grid Margin="0,0,0,10">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <DockPanel Grid.Row="0" Margin="0,0,0,4">
+                            <TextBlock Text="CPU" FontSize="11" FontWeight="Medium" Foreground="#9CA3AF" DockPanel.Dock="Left"/>
+                            <TextBlock x:Name="TxtCardCpu" Text="0%" HorizontalAlignment="Right" FontSize="12" FontWeight="Bold" Foreground="#60A5FA"/>
+                        </DockPanel>
+                        <ProgressBar x:Name="BarCardCpu" Grid.Row="1" Style="{StaticResource WidgetProgressBarStyle}" Foreground="#60A5FA" Value="0" Maximum="100"/>
+                    </Grid>
+
+                    <!-- MEMÓRIA -->
+                    <Grid Margin="0,0,0,10">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <DockPanel Grid.Row="0" Margin="0,0,0,4">
+                            <TextBlock Text="MEMÓRIA" FontSize="11" FontWeight="Medium" Foreground="#9CA3AF" DockPanel.Dock="Left"/>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                <TextBlock x:Name="TxtCardMemSub" Text="-- / -- GB" FontSize="9" Foreground="#6B7280" Margin="0,2,6,0"/>
+                                <TextBlock x:Name="TxtCardMem" Text="0%" FontSize="12" FontWeight="Bold" Foreground="#A78BFA"/>
+                            </StackPanel>
+                        </DockPanel>
+                        <ProgressBar x:Name="BarCardMem" Grid.Row="1" Style="{StaticResource WidgetProgressBarStyle}" Foreground="#A78BFA" Value="0" Maximum="100"/>
+                    </Grid>
+
+                    <!-- DISCO -->
+                    <Grid Margin="0,0,0,4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <DockPanel Grid.Row="0" Margin="0,0,0,4">
+                            <TextBlock Text="DISCO" FontSize="11" FontWeight="Medium" Foreground="#9CA3AF" DockPanel.Dock="Left"/>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                <TextBlock x:Name="TxtCardDiskSub" Text="Atividade" FontSize="9" Foreground="#6B7280" Margin="0,2,6,0"/>
+                                <TextBlock x:Name="TxtCardDisk" Text="0%" FontSize="12" FontWeight="Bold" Foreground="#34D399"/>
+                            </StackPanel>
+                        </DockPanel>
+                        <ProgressBar x:Name="BarCardDisk" Grid.Row="1" Style="{StaticResource WidgetProgressBarStyle}" Foreground="#34D399" Value="0" Maximum="100"/>
+                    </Grid>
+                </StackPanel>
+
+                <!-- Rodapé com Versão Atual -->
+                <DockPanel Grid.Row="2" Margin="0,8,0,0">
+                    <TextBlock x:Name="TxtCardVersion" Text="v1.0.0" FontSize="9" FontWeight="Medium" Foreground="#65FFFFFF" VerticalAlignment="Center"/>
+                    <TextBlock Text="ZPulse" HorizontalAlignment="Right" FontSize="9" FontWeight="SemiBold" Foreground="#40FFFFFF" VerticalAlignment="Center"/>
+                </DockPanel>
+            </Grid>
+
+            <!-- Grip de redimensionamento no canto inferior direito -->
+            <TextBlock Text="◢" FontSize="9" Foreground="#35FFFFFF" 
+                       HorizontalAlignment="Right" VerticalAlignment="Bottom" 
+                       Margin="0,0,2,2" IsHitTestVisible="False"/>
+            <Thumb Width="14" Height="14" 
+                   HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                   Cursor="SizeNWSE" Style="{StaticResource ResizeThumbStyle}"
+                   DragDelta="ResizeThumb_DragDelta"/>
+        </Grid>
+    </Border>
+</Window>
